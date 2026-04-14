@@ -1,0 +1,95 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --info-color: #16a085;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 2px solid #f0f0f0;
+    font-weight: 600;
+    padding: 15px 20px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #34495e;
+    border-color: #34495e;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #555;
+}
+
+.badge {
+    padding: 5px 10px;
+    font-weight: 500;
+}
+
+.stat-card {
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 20px;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    background-color: var(--success-color);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .stat-card {
+        margin-bottom: 15px;
+    }
+}

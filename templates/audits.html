@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Audits - Finance Audit System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-clipboard-list"></i> Audits</h1>
+    <a href="{{ url_for('main.add_audit') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Schedule New Audit
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>All Audits</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Audit Name</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th>Audit Date</th>
+                        <th>Status</th>
+                        <th>Risk Score</th>
+                        <th>Compliance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                    <tr>
+                        <td>{{ audit.audit_name }}</td>
+                        <td>{{ audit.project.project_name }}</td>
+                        <td>{{ audit.audit_type }}</td>
+                        <td>{{ audit.audit_date }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if audit.status == 'completed' else 'danger' if audit.status == 'rejected' else 'warning' }}">
+                                {{ audit.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-{{ 'danger' if audit.risk_score > 70 else 'warning' if audit.risk_score > 40 else 'success' }}" 
+                                     style="width: {{ audit.risk_score }}%">
+                                    {{ "%.1f"|format(audit.risk_score) }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-info" style="width: {{ audit.compliance_score }}%">
+                                    {{ "%.1f"|format(audit.compliance_score) }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewAuditDetails({{ audit.id }})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="editAudit({{ audit.id }})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">No audits found. <a href="{{ url_for('main.add_audit') }}">Schedule your first audit</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Details Modal -->
+<div class="modal fade" id="auditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Audit Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="auditModalBody">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewAuditDetails(auditId) {
+    // In a real application, you would fetch audit details via AJAX
+    // For now, redirect to a details page or show a modal with static data
+    alert('Audit details feature coming soon. Audit ID: ' + auditId);
+}
+
+function editAudit(auditId) {
+    alert('Edit audit feature coming soon. Audit ID: ' + auditId);
+}
+</script>
+{% endblock %}

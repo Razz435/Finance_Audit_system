@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - Finance Audit System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <i class="fas fa-user-circle fa-3x"></i>
+                <h4 class="mt-2">{{ current_user.username }}</h4>
+                <span class="badge bg-{{ 'primary' if current_user.role == 'admin' else 'secondary' }}">
+                    {{ current_user.role|upper }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p><strong><i class="fas fa-envelope"></i> Email:</strong> {{ current_user.email }}</p>
+                <p><strong><i class="fas fa-calendar"></i> Member since:</strong> {{ current_user.created_at.strftime('%Y-%m-%d') }}</p>
+                <p><strong><i class="fas fa-clock"></i> Last login:</strong> {{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'Never' }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Edit Profile</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" value="{{ current_user.username }}" disabled>
+                        <small class="text-muted">Username cannot be changed</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                    </div>
+                    
+                    <hr>
+                    <h6>Change Password</h6>
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password">
+                        <small class="text-muted">Leave blank to keep current password</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> User Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h6>Projects Created</h6>
+                        <h3 class="text-primary">{{ current_user.projects|length }}</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Audits Performed</h6>
+                        <h3 class="text-info">{{ current_user.audits|length }}</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Total Budget</h6>
+                        <h3 class="text-success">
+                            ${{ "{:,.0f}".format(current_user.projects|sum(attribute='budget_amount')) }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password confirmation validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (newPassword && newPassword !== confirmPassword) {
+        e.preventDefault();
+        alert('New passwords do not match!');
+    }
+});
+</script>
+{% endblock %}

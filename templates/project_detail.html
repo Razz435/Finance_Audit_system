@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.project_name }} - Project Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-project-diagram"></i> {{ project.project_name }}</h1>
+    <div>
+        <a href="{{ url_for('main.edit_project', id=project.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{{ url_for('main.projects') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Project Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="width: 30%">Project Code</th>
+                        <td>{{ project.project_code }}</td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td>{{ project.description or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Department</th>
+                        <td>{{ project.department or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Start Date</th>
+                        <td>{{ project.start_date }}</td>
+                    </tr>
+                    <tr>
+                        <th>End Date</th>
+                        <td>{{ project.end_date or 'Not specified' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            <span class="badge bg-{{ 'success' if project.status == 'active' else 'secondary' if project.status == 'completed' else 'warning' }}">
+                                {{ project.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Risk Level</th>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if project.risk_level == 'high' else 'warning' if project.risk_level == 'medium' else 'success' }}">
+                                {{ project.risk_level }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6>Budget Amount</h6>
+                            <h3 class="text-primary">${{ "{:,.2f}".format(project.budget_amount) }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6>Actual Amount</h6>
+                            <h3 class="text-warning">${{ "{:,.2f}".format(project.actual_amount) }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6>Variance</h6>
+                            <h3 class="text-{{ 'success' if project.variance >= 0 else 'danger' }}">
+                                ${{ "{:,.2f}".format(project.variance) }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label>Budget Utilization: {{ "%.1f"|format(project.budget_utilization) }}%</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-{{ 'danger' if project.budget_utilization > 90 else 'warning' if project.budget_utilization > 75 else 'success' }}" 
+                             style="width: {{ project.budget_utilization }}%">
+                            {{ "%.1f"|format(project.budget_utilization) }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h6>Total Audits</h6>
+                    <h2 class="text-info">{{ audits|length }}</h2>
+                </div>
+                <div class="text-center">
+                    <h6>Total Transactions</h6>
+                    <h2 class="text-success">{{ transactions|length }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('main.add_audit') }}?project_id={{ project.id }}" class="btn btn-primary w-100 mb-2">
+                    <i class="fas fa-clipboard-list"></i> Add Audit
+                </a>
+                <button class="btn btn-info w-100" onclick="exportToCSV('transactionsTable', '{{ project.project_code }}_transactions')">
+                    <i class="fas fa-download"></i> Export Transactions
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Audits</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Audit Name</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Risk Score</th>
+                        <th>Compliance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                    <tr>
+                        <td>{{ audit.audit_name }}</td>
+                        <td>{{ audit.audit_type }}</td>
+                        <td>{{ audit.audit_date }}</td>
+                        <td><span class="badge bg-{{ 'success' if audit.status == 'completed' else 'warning' }}">{{ audit.status }}</span></td>
+                        <td>{{ "%.1f"|format(audit.risk_score) }}%</td>
+                        <td>{{ "%.1f"|format(audit.compliance_score) }}%</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No audits found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Transactions</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Vendor</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.transaction_date }}</td>
+                        <td>{{ transaction.description }}</td>
+                        <td>{{ transaction.category or '-' }}</td>
+                        <td>{{ transaction.vendor or '-' }}</td>
+                        <td class="text-end">${{ "{:,.2f}".format(transaction.amount) }}</td>
+                        <td><span class="badge bg-{{ 'success' if transaction.payment_status == 'paid' else 'warning' }}">{{ transaction.payment_status }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No transactions found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Finance Audit System{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-chart-bar"></i> Financial Reports</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6 class="card-title">Total Projects</h6>
+                <h2>{{ total_projects }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6 class="card-title">Total Budget</h6>
+                <h3>${{ "{:,.0f}".format(total_budget) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6 class="card-title">Actual Spent</h6>
+                <h3>${{ "{:,.0f}".format(total_actual) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h6 class="card-title">Total Audits</h6>
+                <h2>{{ total_audits }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Budget vs Actual</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="budgetChart"></canvas>
+                <div class="mt-3 text-center">
+                    <h4>Variance: ${{ "{:,.2f}".format(total_variance) }}</h4>
+                    <p class="text-{{ 'success' if total_variance >= 0 else 'danger' }}">
+                        {{ "Under budget" if total_variance >= 0 else "Over budget" }} by ${{ "{:,.0f}".format(total_variance|abs) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Projects by Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Risk Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="riskChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Audit Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h6>Average Risk Score</h6>
+                    <h2 class="text-danger">{{ "%.1f"|format(avg_risk_score) }}%</h2>
+                    <div class="progress mb-4">
+                        <div class="progress-bar bg-danger" style="width: {{ avg_risk_score }}%"></div>
+                    </div>
+                    
+                    <h6>Average Compliance Score</h6>
+                    <h2 class="text-success">{{ "%.1f"|format(avg_compliance) }}%</h2>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {{ avg_compliance }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Detailed Project Financials</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="reportTable">
+                <thead>
+                    <tr>
+                        <th>Project Code</th>
+                        <th>Project Name</th>
+                        <th>Budget</th>
+                        <th>Actual</th>
+                        <th>Variance</th>
+                        <th>Utilization</th>
+                        <th>Status</th>
+                        <th>Risk</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    <!-- Data will be populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div class="text-end mt-3">
+            <button class="btn btn-success" onclick="exportToCSV('reportTable', 'financial_report')">
+                <i class="fas fa-download"></i> Export to CSV
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fetch project data for reports
+fetch('/api/stats')
+    .then(response => response.json())
+    .then(data => {
+        // Populate budget utilization chart
+        const ctx1 = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: data.budget_utilization.map(p => p.name),
+                datasets: [
+                    {
+                        label: 'Budget',
+                        data: data.budget_utilization.map(p => p.budget),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                    },
+                    {
+                        label: 'Actual',
+                        data: data.budget_utilization.map(p => p.actual),
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Amount ($)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+// Status Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Active', 'Completed', 'On Hold', 'Cancelled'],
+        datasets: [{
+            data: [{{ status_counts.active }}, {{ status_counts.completed }}, {{ status_counts.on_hold }}, {{ status_counts.cancelled }}],
+            backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#dc3545']
+        }]
+    }
+});
+
+// Risk Chart
+const riskCtx = document.getElementById('riskChart').getContext('2d');
+new Chart(riskCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Low', 'Medium', 'High', 'Critical'],
+        datasets: [{
+            data: [{{ risk_counts.low }}, {{ risk_counts.medium }}, {{ risk_counts.high }}, {{ risk_counts.critical }}],
+            backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#dc3545']
+        }]
+    }
+});
+
+// Populate report table
+fetch('/api/stats')
+    .then(response => response.json())
+    .then(data => {
+        const tbody = document.getElementById('reportTableBody');
+        tbody.innerHTML = '';
+        
+        data.budget_utilization.forEach(project => {
+            const row = tbody.insertRow();
+            row.insertCell(0).textContent = project.name;
+            row.insertCell(1).textContent = project.name;
+            row.insertCell(2).textContent = '$' + project.budget.toLocaleString();
+            row.insertCell(3).textContent = '$' + project.actual.toLocaleString();
+            row.insertCell(4).textContent = '$' + (project.budget - project.actual).toLocaleString();
+            row.insertCell(5).textContent = ((project.actual / project.budget) * 100).toFixed(1) + '%';
+            row.insertCell(6).innerHTML = '<span class="badge bg-success">Active</span>';
+            row.insertCell(7).innerHTML = '<span class="badge bg-warning">Medium</span>';
+        });
+    });
+</script>
+{% endblock %}

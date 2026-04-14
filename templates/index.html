@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Finance Audit System{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Projects</h5>
+                <h2>{{ total_projects }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Audits</h5>
+                <h2>{{ total_audits }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Total Budget</h5>
+                <h2>${{ "{:,.2f}".format(total_budget) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Actual Spent</h5>
+                <h2>${{ "{:,.2f}".format(total_actual) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Project Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+                <div class="mt-3">
+                    <p>Active: {{ active_projects }}</p>
+                    <p>Completed: {{ completed_projects }}</p>
+                    <p>High Risk: {{ high_risk_projects }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Projects</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Project Code</th>
+                                <th>Project Name</th>
+                                <th>Budget</th>
+                                <th>Status</th>
+                                <th>Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in recent_projects %}
+                            <tr>
+                                <td>{{ project.project_code }}</td>
+                                <td>{{ project.project_name }}</td>
+                                <td>${{ "{:,.2f}".format(project.budget_amount) }}</td>
+                                <td><span class="badge bg-{{ 'success' if project.status == 'active' else 'secondary' }}">{{ project.status }}</span></td>
+                                <td><span class="badge bg-{{ 'danger' if project.risk_level == 'high' else 'warning' if project.risk_level == 'medium' else 'success' }}">{{ project.risk_level }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Audits</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Audit Name</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Risk Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for audit in recent_audits %}
+                            <tr>
+                                <td>{{ audit.audit_name }}</td>
+                                <td>{{ audit.audit_type }}</td>
+                                <td>{{ audit.audit_date }}</td>
+                                <td><span class="badge bg-{{ 'success' if audit.status == 'completed' else 'warning' }}">{{ audit.status }}</span></td>
+                                <td>{{ "%.1f"|format(audit.risk_score) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Status Chart
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Completed', 'On Hold', 'Cancelled'],
+            datasets: [{
+                data: [{{ active_projects }}, {{ completed_projects }}, 0, 0],
+                backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#dc3545']
+            }]
+        }
+    });
+</script>
+{% endblock %}
